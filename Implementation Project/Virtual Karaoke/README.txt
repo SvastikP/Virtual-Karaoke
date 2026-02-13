@@ -14,3 +14,6 @@ How to run Virtual Karaoke
 
     Open your web browser and visit:
         http://localhost:3000
+
+    To close the web
+        Ctrl + C
