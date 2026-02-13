@@ -5,13 +5,11 @@ function Home() {
     const res = await fetch("http://localhost:4000/create-room", {
       method: "POST"
     });
-    //Wait for data to be sent from backend
-    const data = await res.json();
-    //Get room id
-    const roomId = data.roomId;
 
-    //Send client to new room
-    window.location.href = `/room/${roomId}`;
+    const data = await res.json(); //Wait for data to be sent from backend
+    const roomId = data.roomId; //Get room id
+
+    window.location.href = `/room/${roomId}`; //Send client to new room
   };
 
   return (
