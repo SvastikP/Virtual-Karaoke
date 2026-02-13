@@ -1,12 +1,16 @@
 function Home() {
+
+  //Send POST request to backend to create room
   const createRoom = async () => {
     const res = await fetch("http://localhost:4000/create-room", {
       method: "POST"
     });
-
+    //Wait for data to be sent from backend
     const data = await res.json();
+    //Get room id
     const roomId = data.roomId;
 
+    //Send client to new room
     window.location.href = `/room/${roomId}`;
   };
 
