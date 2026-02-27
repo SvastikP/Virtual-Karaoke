@@ -20,15 +20,15 @@ app.post("/create-room", (req, res) => {
     res.json({ roomId }); }) //Send room id to front end
 
 
+//Recive POST to join a room
 app.post("/join-room", (req, res) => {
-    const {roomId} = req.body;
-
+    const {roomId} = req.body; //Get room id
     exists = false;
 
-    if(rooms[roomId])
+    if(rooms[roomId]) //Room exists
         exists = true;
 
-    return res.json({exists})
+    return res.json({exists}) //Send if room exists
 })
 
 app.listen(4000, () => console.log("Server running on port 4000"));

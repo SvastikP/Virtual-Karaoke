@@ -19,28 +19,6 @@
 .buttonContainer {
   display: flex;
   flex-direction: column;
-<<<<<<< HEAD
-  gap: 20px;
-  align-items: center;
-}
-
-.joinContainer {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
-  align-items: center;
-}
-
-.joinInput {
-  padding: 8px 12px;
-  font-size: 1rem;
-}
-
-.joinButton {
-  padding: 8px 12px;
-  font-size: 1rem;
-}
-=======
   gap: 20px;                
 }
 
@@ -52,4 +30,10 @@
   height: 100vh;            
   text-align: center;
 }
->>>>>>> f974a0ce53e5123bec8ad0c79680e95df8a11e4e
+
+.camera-preview { 
+  width: 400px; 
+  height: auto; 
+  border-radius: 10px; 
+  background: black; 
+}
