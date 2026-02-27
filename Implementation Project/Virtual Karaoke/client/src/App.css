@@ -19,6 +19,7 @@
 .buttonContainer {
   display: flex;
   flex-direction: column;
+<<<<<<< HEAD
   gap: 20px;
   align-items: center;
 }
@@ -39,3 +40,16 @@
   padding: 8px 12px;
   font-size: 1rem;
 }
+=======
+  gap: 20px;                
+}
+
+.room-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;      
+  justify-content: center;  
+  height: 100vh;            
+  text-align: center;
+}
+>>>>>>> f974a0ce53e5123bec8ad0c79680e95df8a11e4e
