@@ -1,8 +1,10 @@
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import React from "react";
+import { render, screen } from "@testing-library/react";
+import App from "./App";
 
-test('renders learn react link', () => {
+test("renders Virtual Karaoke home by default", () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  expect(screen.getByText(/Virtual Karaoke/i)).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Create Room/i })).toBeInTheDocument();
+  expect(screen.getByPlaceholderText(/Enter Room ID/i)).toBeInTheDocument();
 });
