@@ -18,6 +18,7 @@ app.use(express.json());
 // Store room ids, participants, chat messages, and queue
 const rooms = {};
 const MAX_MESSAGES_PER_ROOM = 100;
+const MAX_USERS_PER_ROOM = 15;
 
 // Create a room
 app.post("/create-room", (_req, res) => {
@@ -47,12 +48,55 @@ app.get("/songs", (_req, res) => res.json(SONGS));
 
 // Socket.io: client connects and joins a room by roomId
 io.on("connection", (socket) => {
-  socket.on("join-room", (roomId) => {
+  let currentRoom = null;
+  let currentUsername = null;
+
+  socket.on("join-room", ({roomId, username}) => {
     if (!rooms[roomId]) return;
+    const room = rooms[roomId];
+
+    //15 users per room
+    if (room.users.length >= MAX_USERS_PER_ROOM) {
+      socket.emit("room-full");
+      return;
+    }
+
+    currentRoom = roomId;
+    currentUsername = username;
+
+    //Add this user to room's user list and join sockets room
+    room.users.push({ socketId: socket.id, username });
     socket.join(roomId);
+
+    //Send new user a list of all existing peers in room
+    //Used to create webRTC connections
+    const existingPeers = room.users
+      .filter(u => u.socketId !== socket.id)
+      .map(u => ({ socketId: u.socketId, username: u.username }));
+    socket.emit("existing-peers", existingPeers);
+
     // Send current chat history and queue so the new client is in sync
     socket.emit("chat-history", rooms[roomId].messages);
     socket.emit("queue-updated", rooms[roomId].queue);
+
+    socket.to(roomId).emit("user-joined", { socketId: socket.id, username });
+  });
+
+  //Forward offer to targeted peer
+  //Session description used to detail how to communicate
+  socket.on("webrtc-offer", ({ targetSocketId, offer, username }) => {
+    io.to(targetSocketId).emit("webrtc-offer", { fromSocketId: socket.id, offer, username });
+  });
+
+  //Foward answer to peer who sent the offer
+  //Session description used to answer back if offer can be worked on
+  socket.on("webrtc-answer", ({ targetSocketId, answer }) => {
+    io.to(targetSocketId).emit("webrtc-answer", { fromSocketId: socket.id, answer });
+  });
+
+  //Foward ICE candiates to the correct peer
+  socket.on("webrtc-ice-candidate", ({ targetSocketId, candidate }) => {
+    io.to(targetSocketId).emit("webrtc-ice-candidate", { fromSocketId: socket.id, candidate });
   });
 
   socket.on("chat-message", ({ roomId, username, text }) => {
@@ -84,7 +128,12 @@ io.on("connection", (socket) => {
     io.to(roomId).emit("queue-updated", rooms[roomId].queue);
   });
 
-  socket.on("disconnect", () => {});
+  socket.on("disconnect", () => {
+    if (currentRoom && rooms[currentRoom]) {
+      rooms[currentRoom].users = rooms[currentRoom].users.filter(u => u.socketId !== socket.id);
+      io.to(currentRoom).emit("user-left", { socketId: socket.id });
+    }
+  });
 });
 
 if (require.main === module) {

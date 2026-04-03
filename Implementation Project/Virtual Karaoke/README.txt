@@ -2,11 +2,12 @@ Prerequisites
     Install Docker Desktop  
     Have Docker Desktop running in background
 
-How to run Virtual Karaoke
+How to run Virtual Karaoke:
     Open a terminal and navigate to the project root folder:
         "Virtual Karaoke"
 
     Build and start both the client and server containers:
+        docker compose up --build
 
     When containers are built, you will see:
         server-1  | Server running on port 4000
@@ -15,5 +16,5 @@ How to run Virtual Karaoke
     Open your web browser and visit:
         http://localhost:3000
 
-    To close the web
+    To close the web:
         Ctrl + C
