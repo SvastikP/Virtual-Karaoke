@@ -379,3 +379,10 @@ body {
   font-style: italic;
   padding: 12px;
 }
+
+.karaoke-player {
+  width: 100%;
+  border-radius: 10px;
+  background: #000;
+  margin-bottom: 12px;
+}

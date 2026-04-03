@@ -134,6 +134,14 @@ function Room() {
     s.on("chat-message", (msg) => setMessages((prev) => [...prev, msg]));
     s.on("queue-updated", (q) => setQueue(Array.isArray(q) ? q : []));
 
+    s.on("play-song", ({ streamUrl }) => {
+      const player = document.getElementById("karaoke-player");
+      if (player) {
+        player.src = streamUrl;
+        player.play().catch(err => console.error("Autoplay blocked:", err));
+      }
+    });
+
     s.on("connect", () => { s.emit("join-room", { roomId, username }); });
     
     s.on("room-full", () => {
@@ -258,6 +266,26 @@ function Room() {
     });
   };
 
+  const handlePlayNow = async (song) => {
+    if (!socket) return;
+
+    socket.emit("play-now", {
+      roomId,
+      videoUrl: song.video_url || song.videoUrl
+    });
+  };
+
+  const fetchStreamUrl = async (videoUrl) => {
+    try {
+      const res = await fetch(`http://localhost:5000/songs/stream?video_url=${encodeURIComponent(videoUrl)}`);
+      const data = await res.json();
+      return data.stream_url;
+    } catch (err) {
+      console.error("Stream fetch error:", err);
+      return null;
+    }
+  };
+
   const handleRemoveFromQueue = (queueItemId) => {
     if (!socket) return;
     socket.emit("queue-remove", { roomId, queueItemId });
@@ -291,6 +319,13 @@ function Room() {
       <div className="room-body">
 
         <div className="video-grid-wrap">
+          <video
+            id="karaoke-player"
+            className="karaoke-player"
+            controls
+            autoPlay
+            style={{ width: "100%", marginBottom: "12px", borderRadius: "8px" }}
+          />
           <div className="video-grid" style={{ "--cols": gridCols }}>
             {localStream
               ? <VideoTile stream={localStream} username={username} isSelf={true} />
@@ -331,10 +366,18 @@ function Room() {
                     <span className="s-artist">{song.artist}</span>
                   </div>
                   <div className="song-btns">
-                    <button className={"btn-preview " + (previewSongId === song.id ? "active" : "")} onClick={() => handlePreview(song)}>
+                    <button
+                      className={"btn-preview " + (previewSongId === song.id ? "active" : "")}
+                      onClick={() => handlePreview(song)}
+                    >
                       {previewSongId === song.id ? "■" : "▶"}
                     </button>
+
                     <button className="btn-add" onClick={() => handleAddToQueue(song)}>+</button>
+
+                    <button className="btn-add" style={{ background: "#1976d2" }} onClick={() => handlePlayNow(song)}>
+                      Play
+                    </button>
                   </div>
                   {previewSongId === song.id && song.previewUrl && (
                     <audio ref={audioRef} src={song.previewUrl} autoPlay onEnded={() => setPreviewSongId(null)} controls className="preview-audio" />

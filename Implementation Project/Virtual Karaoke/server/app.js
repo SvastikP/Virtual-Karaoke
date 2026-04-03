@@ -128,6 +128,20 @@ io.on("connection", (socket) => {
     io.to(roomId).emit("queue-updated", rooms[roomId].queue);
   });
 
+  socket.on("play-now", async ({ roomId, videoUrl }) => {
+    try {
+      const axios = require("axios");
+      const res = await axios.get("http://localhost:5000/songs/stream", {
+        params: { video_url: videoUrl }
+      });
+
+      const streamUrl = res.data.stream_url;
+      io.to(roomId).emit("play-song", { streamUrl });
+    } catch (err) {
+      console.error("Play-now error:", err);
+    }
+  });
+
   socket.on("disconnect", () => {
     if (currentRoom && rooms[currentRoom]) {
       rooms[currentRoom].users = rooms[currentRoom].users.filter(u => u.socketId !== socket.id);
