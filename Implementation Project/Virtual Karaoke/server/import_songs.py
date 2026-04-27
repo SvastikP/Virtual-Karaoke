@@ -1,3 +1,5 @@
+#Create Karaoke database
+#Database format id, title, video_url, duration
 import sqlite3
 import csv
 
