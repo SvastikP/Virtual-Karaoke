@@ -119,6 +119,42 @@ body {
   max-width: 700px;
 }
 
+.performer-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff7e6;
+  border: 1px solid #ffd27a;
+}
+
+.performer-name {
+  font-weight: 700;
+  color: #7a4a00;
+}
+
+.performer-upvotes {
+  font-size: 0.9rem;
+  color: #8a5a00;
+}
+
+.btn-upvote {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ffb300;
+  background: #ffc107;
+  color: #222;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-upvote:hover {
+  background: #ffb300;
+}
+
 .video-grid {
   display: grid;
   grid-template-columns: repeat(var(--cols, 1), 1fr);
@@ -132,6 +168,13 @@ body {
   overflow: hidden;
   aspect-ratio: 16/9;
   border: 1px solid #ccc;
+}
+
+.performer-tile {
+  border: 3px solid #ffb300;
+  box-shadow: 0 0 0 3px rgba(255, 179, 0, 0.25);
+  transform: scale(1.04);
+  z-index: 1;
 }
 
 .video-el {

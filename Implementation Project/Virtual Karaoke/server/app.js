@@ -20,13 +20,23 @@ const rooms = {};
 const MAX_MESSAGES_PER_ROOM = 100;
 const MAX_USERS_PER_ROOM = 15;
 
+function getPublicPerformer(performer) {
+  if (!performer) return null;
+  return {
+    socketId: performer.socketId,
+    username: performer.username,
+    upvotes: performer.upvotes
+  };
+}
+
 // Create a room
 app.post("/create-room", (_req, res) => {
   const roomId = Math.random().toString(36).substring(2, 8);
   rooms[roomId] = {
     users: [],
     messages: [],
-    queue: []
+    queue: [],
+    performer: null
   };
   res.json({ roomId });
 });
@@ -78,6 +88,7 @@ io.on("connection", (socket) => {
     // Send current chat history and queue so the new client is in sync
     socket.emit("chat-history", rooms[roomId].messages);
     socket.emit("queue-updated", rooms[roomId].queue);
+    socket.emit("performer-updated", getPublicPerformer(rooms[roomId].performer));
 
     socket.to(roomId).emit("user-joined", { socketId: socket.id, username });
   });
@@ -136,14 +147,43 @@ io.on("connection", (socket) => {
       });
 
       const streamUrl = res.data.stream_url;
+      if (rooms[roomId]) {
+        rooms[roomId].performer = {
+          socketId: socket.id,
+          username: currentUsername || "Unknown",
+          upvotes: 0,
+          voterSocketIds: []
+        };
+        io.to(roomId).emit("performer-updated", getPublicPerformer(rooms[roomId].performer));
+      }
       io.to(roomId).emit("play-song", { streamUrl });
     } catch (err) {
       console.error("Play-now error:", err);
     }
   });
 
+  socket.on("performer-upvote", ({ roomId }) => {
+    if (!rooms[roomId] || !rooms[roomId].performer) return;
+
+    const performer = rooms[roomId].performer;
+
+    // No self-upvotes: performer cannot vote for their own performance.
+    if (performer.socketId === socket.id) return;
+
+    // One vote per user per performance.
+    if (performer.voterSocketIds.includes(socket.id)) return;
+
+    performer.voterSocketIds.push(socket.id);
+    performer.upvotes += 1;
+    io.to(roomId).emit("performer-updated", getPublicPerformer(performer));
+  });
+
   socket.on("disconnect", () => {
     if (currentRoom && rooms[currentRoom]) {
+      if (rooms[currentRoom].performer?.socketId === socket.id) {
+        rooms[currentRoom].performer = null;
+        io.to(currentRoom).emit("performer-updated", null);
+      }
       rooms[currentRoom].users = rooms[currentRoom].users.filter(u => u.socketId !== socket.id);
       io.to(currentRoom).emit("user-left", { socketId: socket.id });
     }

@@ -16,7 +16,7 @@ const ICE_SERVERS = {
 };
 
 //Display a user's video
-function VideoTile({ stream, username, isSelf }) {
+function VideoTile({ stream, username, isSelf, isPerformer }) {
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -27,9 +27,12 @@ function VideoTile({ stream, username, isSelf }) {
   }, [stream]);
 
   return (
-    <div className="video-tile" data-self={isSelf}>
+    <div className={"video-tile" + (isPerformer ? " performer-tile" : "")} data-self={isSelf}>
       <video ref={videoRef} autoPlay playsInline muted={isSelf} className="video-el" />
-      <div className="video-label">{isSelf ? `${username} (You)` : username}</div>
+      <div className="video-label">
+        {isSelf ? `${username} (You)` : username}
+        {isPerformer ? " • Singing" : ""}
+      </div>
     </div>
   );
 }
@@ -55,6 +58,8 @@ function Room() {
 
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
+  const [selfSocketId, setSelfSocketId] = useState(null);
+  const [performer, setPerformer] = useState(null);
 
   //Sync users
   const updatePeers = useCallback(() => {
@@ -133,6 +138,7 @@ function Room() {
     s.on("chat-history", (history) => setMessages(Array.isArray(history) ? history : []));
     s.on("chat-message", (msg) => setMessages((prev) => [...prev, msg]));
     s.on("queue-updated", (q) => setQueue(Array.isArray(q) ? q : []));
+    s.on("performer-updated", (nextPerformer) => setPerformer(nextPerformer || null));
 
     s.on("play-song", ({ streamUrl }) => {
       const player = document.getElementById("karaoke-player");
@@ -142,7 +148,10 @@ function Room() {
       }
     });
 
-    s.on("connect", () => { s.emit("join-room", { roomId, username }); });
+    s.on("connect", () => {
+      setSelfSocketId(s.id);
+      s.emit("join-room", { roomId, username });
+    });
     
     s.on("room-full", () => {
       alert("Room is full (max 15 users).");
@@ -291,9 +300,15 @@ function Room() {
     socket.emit("queue-remove", { roomId, queueItemId });
   };
 
+  const handleUpvotePerformer = () => {
+    if (!socket || !performer) return;
+    socket.emit("performer-upvote", { roomId });
+  };
+
   const peerEntries = Object.entries(peers);
   const totalTiles = 1 + peerEntries.length;
   const gridCols = totalTiles <= 1 ? 1 : totalTiles <= 4 ? 2 : totalTiles <= 9 ? 3 : 4;
+  const isSelfPerformer = performer?.socketId === selfSocketId;
 
 
 
@@ -319,6 +334,21 @@ function Room() {
       <div className="room-body">
 
         <div className="video-grid-wrap">
+          <div className="performer-bar">
+            {performer ? (
+              <>
+                <span className="performer-name">{performer.username} is performing</span>
+                <span className="performer-upvotes">Upvotes: {performer.upvotes}</span>
+                {!isSelfPerformer && (
+                  <button type="button" className="btn-upvote" onClick={handleUpvotePerformer}>
+                    Upvote
+                  </button>
+                )}
+              </>
+            ) : (
+              <span className="performer-name">No one is currently performing</span>
+            )}
+          </div>
           <video
             id="karaoke-player"
             className="karaoke-player"
@@ -328,11 +358,17 @@ function Room() {
           />
           <div className="video-grid" style={{ "--cols": gridCols }}>
             {localStream
-              ? <VideoTile stream={localStream} username={username} isSelf={true} />
+              ? <VideoTile stream={localStream} username={username} isSelf={true} isPerformer={isSelfPerformer} />
               : <div className="video-tile no-stream"><div className="video-label">{username} (You)</div><div className="no-cam">📷</div></div>
             }
             {peerEntries.map(([socketId, { stream, username: peerName }]) => (
-              <VideoTile key={socketId} stream={stream} username={peerName} isSelf={false} />
+              <VideoTile
+                key={socketId}
+                stream={stream}
+                username={peerName}
+                isSelf={false}
+                isPerformer={performer?.socketId === socketId}
+              />
             ))}
           </div>
         </div>
