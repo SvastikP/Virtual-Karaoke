@@ -14,7 +14,8 @@ How to run Virtual Karaoke:
         client-1  | Client running on port 3000
 
     Open your web browser and visit:
-        http://localhost:3000
+        http://localhost:3000 -> For Virtual Karaoke
+        http://localhost:5000/songs -> For API of Song libraries
 
     To close the web:
         Ctrl + C
