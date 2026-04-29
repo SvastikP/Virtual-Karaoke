@@ -91,6 +91,7 @@ io.on("connection", (socket) => {
     socket.emit("chat-history", rooms[roomId].messages);
     socket.emit("queue-updated", rooms[roomId].queue);
     socket.emit("performer-updated", getPublicPerformer(rooms[roomId].performer));
+    socket.emit("queue-updated", rooms[roomId].queue || []);
 
     socket.to(roomId).emit("user-joined", { socketId: socket.id, username });
   });
@@ -123,45 +124,27 @@ io.on("connection", (socket) => {
   });
 
   socket.on("queue-add", ({ roomId, song, username }) => {
-    if (!rooms[roomId] || !song) return;
-    const item = {
-      id: Date.now().toString() + Math.random().toString(36).substring(2, 6),
-      songId: song.id,
-      title: song.title,
-      artist: song.artist,
-      addedBy: username || "Someone"
-    };
-    rooms[roomId].queue.push(item);
-    io.to(roomId).emit("queue-updated", rooms[roomId].queue);
-  });
-
-  socket.on("queue-remove", ({ roomId, queueItemId }) => {
     if (!rooms[roomId]) return;
-    rooms[roomId].queue = rooms[roomId].queue.filter((item) => item.id !== queueItemId);
+    const room = rooms[roomId];
+    if (!room.queue) room.queue = [];
+    if (room.queue.find(q => q.id === song.id)) return; // no dupes
+    room.queue.push({ ...song, addedBy: username });
+    io.to(roomId).emit("queue-updated", room.queue);
+  });
+
+  socket.on("queue-remove", ({ roomId, songId }) => {
+    if (!rooms[roomId]) return;
+    rooms[roomId].queue = (rooms[roomId].queue || []).filter(q => q.id !== songId);
     io.to(roomId).emit("queue-updated", rooms[roomId].queue);
   });
 
-  socket.on("play-now", async ({ roomId, videoUrl }) => {
-    try {
-      const axios = require("axios");
-      const res = await axios.get("http://localhost:5000/songs/stream", {
-        params: { video_url: videoUrl }
-      });
+  socket.on("play-song", ({ roomId, song }) => {
+    io.to(roomId).emit("play-song", { song });
+  });
 
-      const streamUrl = res.data.stream_url;
-      if (rooms[roomId]) {
-        rooms[roomId].performer = {
-          socketId: socket.id,
-          username: currentUsername || "Unknown",
-          upvotes: 0,
-          voterSocketIds: []
-        };
-        io.to(roomId).emit("performer-updated", getPublicPerformer(rooms[roomId].performer));
-      }
-      io.to(roomId).emit("play-song", { streamUrl });
-    } catch (err) {
-      console.error("Play-now error:", err);
-    }
+  socket.on("player-control", ({ roomId, action, time }) => {
+    // action: "play" | "pause" | "seek"
+    socket.to(roomId).emit("player-control", { action, time });
   });
 
   socket.on("performer-upvote", ({ roomId }) => {
