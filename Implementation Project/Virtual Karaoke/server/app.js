@@ -93,7 +93,7 @@ io.on("connection", (socket) => {
     socket.emit("queue-updated", rooms[roomId].queue);
     socket.emit("performer-updated", getPublicPerformer(rooms[roomId].performer));
     socket.emit("queue-updated", rooms[roomId].queue || []);
-    
+
     if (room.nowPlaying) {
       socket.emit("play-song", { song: room.nowPlaying });
     }
@@ -144,11 +144,24 @@ io.on("connection", (socket) => {
     io.to(roomId).emit("queue-updated", rooms[roomId].queue);
   });
 
-  socket.on("play-song", ({ roomId, song }) => {
+  socket.on("play-song", ({ roomId, song, username }) => {
     if (!rooms[roomId]) return;
+    const room = rooms[roomId];
 
-    rooms[roomId].nowPlaying = song;   // <-- store current song
+    // Store current song
+    room.nowPlaying = song;
+
+    // Set current performer = the user who started the song
+    room.performer = {
+      socketId: socket.id,
+      username: username,
+      upvotes: 0,
+      voterSocketIds: []
+    };
+
+    // Broadcast song + performer
     io.to(roomId).emit("play-song", { song });
+    io.to(roomId).emit("performer-updated", getPublicPerformer(room.performer));
   });
 
   socket.on("player-control", ({ roomId, action, time }) => {

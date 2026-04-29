@@ -409,7 +409,7 @@ function Room() {
   //Also removes it from the queue if it was queued
   const handlePlayNow = (song) => {
     if (!socket) return;
-    socket.emit("play-song", { roomId, song });
+    socket.emit("play-song", { roomId, song, username });
     socket.emit("queue-remove", { roomId, songId: song.id });
   };
 
