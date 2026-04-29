@@ -16,6 +16,7 @@ How to run Virtual Karaoke:
     Open your web browser and visit:
         http://localhost:3000 -> For Virtual Karaoke
         http://localhost:5000/songs -> For API of Song libraries
+        http://localhost:3000/test-songs -> Test song library
 
     To close the web:
         Ctrl + C

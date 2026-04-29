@@ -1,0 +1,107 @@
+[
+  {
+    "id": 2001,
+    "title": "Dandelions",
+    "artist": "Ruth B",
+    "type": "local",
+    "url": "http://localhost:9000/Ruth B - Dandelions.mp4"
+  },
+  {
+    "id": 2002,
+    "title": "Waka Waka (This Time For Africa)",
+    "artist": "Shakira",
+    "type": "local",
+    "url": "http://localhost:9000/Shakira - Waka Waka (This Time For Africa).mp4"
+  },
+  {
+    "id": 2003,
+    "title": "I Want It That Way",
+    "artist": "Backstreet Boys",
+    "type": "local",
+    "url": "http://localhost:9000/Backstreet Boys - I Want It That Way.mp4"
+  },
+  {
+    "id": 2004,
+    "title": "Fly Me To The Moon",
+    "artist": "Frank Sinatra",
+    "type": "local",
+    "url": "http://localhost:9000/Frank Sinatra - Fly Me To The Moon.mp4"
+  },
+  {
+    "id": 2005,
+    "title": "Iris",
+    "artist": "Goo Goo Dolls",
+    "type": "local",
+    "url": "http://localhost:9000/Goo Goo Dolls - Iris.mp4"
+  },
+  {
+    "id": 2006,
+    "title": "drivers license",
+    "artist": "Olivia Rodrigo",
+    "type": "local",
+    "url": "http://localhost:9000/Olivia Rodrigo - drivers license.mp4"
+  },
+  {
+    "id": 2007,
+    "title": "Night Changes",
+    "artist": "One Direction",
+    "type": "local",
+    "url": "http://localhost:9000/One Direction - Night Changes.mp4"
+  },
+  {
+    "id": 2008,
+    "title": "Counting Stars",
+    "artist": "OneRepublic",
+    "type": "local",
+    "url": "http://localhost:9000/OneRepublic - Counting Stars.mp4"
+  },
+  {
+    "id": 2009,
+    "title": "Creep",
+    "artist": "Radiohead",
+    "type": "local",
+    "url": "http://localhost:9000/Radiohead - Creep.mp4"
+  },
+  {
+    "id": 2010,
+    "title": "Lost Boy",
+    "artist": "Ruth B",
+    "type": "local",
+    "url": "http://localhost:9000/Ruth B - Lost Boy.mp4"
+  },
+  {
+    "id": 2011,
+    "title": "Perfect",
+    "artist": "Ed Sheeran",
+    "type": "local",
+    "url": "http://localhost:9000/Ed Sheeran - Perfect.mp4"
+  },
+  {
+    "id": 2012,
+    "title": "Shape Of You",
+    "artist": "Ed Sheeran",
+    "type": "local",
+    "url": "http://localhost:9000/Ed Sheeran - Shape Of You.mp4"
+  },
+  {
+    "id": 2013,
+    "title": "Can't Help Falling In Love",
+    "artist": "Elvis Presley",
+    "type": "local",
+    "url": "http://localhost:9000/Elvis Presley - Can't Help Falling In Love.mp4"
+  },
+  {
+    "id": 2014,
+    "title": "Someone You Loved",
+    "artist": "Lewis Capaldi",
+    "type": "local",
+    "url": "http://localhost:9000/Lewis Capaldi - Someone You Loved.mp4"
+  },
+  {
+    "id": 2015,
+    "title": "7 Years",
+    "artist": "Lukas Graham",
+    "type": "local",
+    "url": "http://localhost:9000/Lukas Graham - 7 Years.mp4"
+  }
+]

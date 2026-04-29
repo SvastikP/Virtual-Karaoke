@@ -2,6 +2,7 @@ import { useState, useEffect, useRef , useCallback} from "react";
 import Webcam from "react-webcam";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
+import allSongs from "./songs";
 
 const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || "http://localhost:4000";
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:4000";
@@ -45,7 +46,10 @@ function Room() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const [username] = useState(() => "User_" + Math.random().toString(36).substring(2, 6));
-  const [songs, setSongs] = useState([]);
+  const [songSearch, setSongSearch] = useState("");
+  const songs = songSearch
+    ? allSongs.filter(s => s.title.toLowerCase().includes(songSearch.toLowerCase()))
+    : allSongs;
   const [queue, setQueue] = useState([]);
   const [previewSongId, setPreviewSongId] = useState(null);
   const messagesEndRef = useRef(null);
@@ -120,15 +124,6 @@ function Room() {
     return () => {
       localStreamRef.current?.getTracks().forEach(t => t.stop());
     };
-  }, []);
-
-
-
-  useEffect(() => {
-    fetch(API_BASE + "/songs")
-      .then((res) => res.json())
-      .then(setSongs)
-      .catch(() => setSongs([]));
   }, []);
 
   useEffect(() => {
@@ -270,18 +265,17 @@ function Room() {
     if (!socket) return;
     socket.emit("queue-add", {
       roomId,
-      song: { id: song.id, title: song.title, artist: song.artist },
+      song: { id: song.id, title: song.title, artist: "" },
       username
     });
   };
 
-  const handlePlayNow = async (song) => {
-    if (!socket) return;
-
-    socket.emit("play-now", {
-      roomId,
-      videoUrl: song.video_url || song.videoUrl
-    });
+  const handlePlayNow = (song) => {
+    window.open(
+      song.video_url,
+      "karaoke_player",
+      "width=900,height=600,toolbar=no,menubar=no,scrollbars=no"
+    );
   };
 
   const fetchStreamUrl = async (videoUrl) => {
@@ -394,30 +388,28 @@ function Room() {
 
           <div className="side-panel">
             <div className="panel-title">Songs</div>
+            <div style={{ padding: "8px" }}>
+              <input
+                type="text"
+                placeholder="Search songs..."
+                value={songSearch}
+                onChange={e => setSongSearch(e.target.value)}
+                style={{ width: "100%", padding: "6px 8px", fontSize: "13px", boxSizing: "border-box", borderRadius: "6px", border: "1px solid #ccc" }}
+              />
+            </div>
             <ul className="panel-list">
               {songs.map(song => (
                 <li key={song.id} className="song-item">
                   <div className="song-meta">
                     <span className="s-title">{song.title}</span>
-                    <span className="s-artist">{song.artist}</span>
+                    <span className="s-artist">{song.duration} min</span>
                   </div>
                   <div className="song-btns">
-                    <button
-                      className={"btn-preview " + (previewSongId === song.id ? "active" : "")}
-                      onClick={() => handlePreview(song)}
-                    >
-                      {previewSongId === song.id ? "■" : "▶"}
-                    </button>
-
                     <button className="btn-add" onClick={() => handleAddToQueue(song)}>+</button>
-
                     <button className="btn-add" style={{ background: "#1976d2" }} onClick={() => handlePlayNow(song)}>
                       Play
                     </button>
                   </div>
-                  {previewSongId === song.id && song.previewUrl && (
-                    <audio ref={audioRef} src={song.previewUrl} autoPlay onEnded={() => setPreviewSongId(null)} controls className="preview-audio" />
-                  )}
                 </li>
               ))}
             </ul>

@@ -1,3 +1,5 @@
+//Client
+//home.js
 import { useState } from "react";
 
 function Home() {

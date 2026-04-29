@@ -1,6 +1,10 @@
-from fastapi import FastAPI
+#Server
+#songs_api.py
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import RedirectResponse
 import sqlite3
 import yt_dlp
+import json
 
 app = FastAPI()
 
@@ -30,31 +34,46 @@ def search_songs(q: str):
     return [dict(row) for row in cur.fetchall()]
 
 @app.get("/songs/stream")
-def get_stream(video_url: str):
-    try:
-        ydl_opts = {
-            "format": "bestvideo+bestaudio/best",
-            "quiet": True,
-            "exec": "node",  # <-- ADD THIS LINE
-        }
+def stream(video_url: str):
+    ydl_opts = {
+        "quiet": True,
+        "skip_download": True,
+        "format": "bv*+ba/best",
+        "http_headers": {
+            "User-Agent": "Mozilla/5.0",
+        },
+    }
 
+    try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(video_url, download=False)
 
-            # Some videos return formats instead of a direct URL
-            if "url" in info:
-                stream_url = info["url"]
-            else:
-                # Pick the best available format
-                formats = info.get("formats", [])
-                if not formats:
-                    return {"error": "No formats available"}
-                stream_url = formats[-1]["url"]
+            fmt = None
+            for f in info["formats"]:
+                if f.get("acodec") != "none" and f.get("vcodec") != "none" and f.get("url"):
+                    fmt = f
+                    break
 
-            return {
-                "title": info.get("title"),
-                "stream_url": stream_url
-            }
+            if not fmt:
+                raise HTTPException(status_code=500, detail="No suitable format found")
+
+            stream_url = fmt["url"]
+
+        # Proxy the stream through FastAPI
+        r = requests.get(stream_url, stream=True, headers={"User-Agent": "Mozilla/5.0"})
+        if r.status_code != 200:
+            raise HTTPException(status_code=500, detail="Failed to fetch video stream")
+
+        return StreamingResponse(
+            r.iter_content(chunk_size=1024 * 64),
+            media_type="video/mp4"
+        )
 
     except Exception as e:
-        return {"error": str(e)}
+        print("yt-dlp error:", e)
+        raise HTTPException(status_code=500, detail="Failed to get stream URL")
+    
+@app.get("/local_songs")
+def local_songs():
+    with open("local_songs.json") as f:
+        return json.load(f)

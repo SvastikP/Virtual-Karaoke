@@ -1,3 +1,5 @@
+#Server
+#Dockerfile.fastapi
 FROM python:3.10
 
 WORKDIR /app
@@ -7,6 +9,7 @@ COPY import_songs.py .
 COPY karaoke.csv .
 COPY karaoke.db .
 
+RUN apt-get update && apt-get install -y sqlite3
 RUN pip install fastapi uvicorn yt-dlp
 
 EXPOSE 5000
