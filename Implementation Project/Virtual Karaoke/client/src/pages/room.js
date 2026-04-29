@@ -1,3 +1,5 @@
+//Server
+//room.js
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
@@ -174,45 +176,57 @@ function Room() {
   }, []);
 
   //Create webRTC connection between users
-  const createPeerConnection = useCallback((targetSocketId, targetUsername, socketInstance) => {
-    const pc = new RTCPeerConnection(ICE_SERVERS);
+  const createPeerConnection = useCallback(
+    (targetSocketId, targetUsername, socketInstance) => {
+      const pc = new RTCPeerConnection(ICE_SERVERS);
 
-    //attach local tracks(audio & video) so remote peer recieves stream
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach(track => {
-        pc.addTrack(track, localStreamRef.current);
-      });
-    }
+      // Attach local tracks
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => {
+          pc.addTrack(track, localStreamRef.current);
+        });
+      }
 
-    //Create empty stream to add new users to video grid
-    const remoteStream = new MediaStream();
-    peersRef.current[targetSocketId] = { pc, stream: remoteStream, username: targetUsername };
-    updatePeers();
-
-    //Add user to empty stream
-    pc.ontrack = (e) => {
-      e.streams[0].getTracks().forEach(track => remoteStream.addTrack(track));
-      peersRef.current[targetSocketId] = { ...peersRef.current[targetSocketId], stream: remoteStream };
+      // Create empty remote stream
+      const remoteStream = new MediaStream();
+      peersRef.current[targetSocketId] = {
+        pc,
+        stream: remoteStream,
+        username: targetUsername,
+      };
       updatePeers();
-    };
 
-    //Forward ice to the empty stream
-    pc.onicecandidate = (e) => {
-      if (e.candidate) {
-        socketInstance.emit("webrtc-ice-candidate", { targetSocketId, candidate: e.candidate });
-      }
-    };
-
-    //Unexpected disconnects
-    pc.onconnectionstatechange = () => {
-      if (["disconnected", "failed", "closed"].includes(pc.connectionState)) {
-        delete peersRef.current[targetSocketId];
+      pc.ontrack = e => {
+        e.streams[0].getTracks().forEach(track => remoteStream.addTrack(track));
+        peersRef.current[targetSocketId] = {
+          ...peersRef.current[targetSocketId],
+          stream: remoteStream,
+        };
         updatePeers();
-      }
-    };
+      };
 
-    return pc;
-  }, [updatePeers]);
+      pc.onicecandidate = e => {
+        if (e.candidate && socketInstance) {
+          socketInstance.emit("webrtc-ice-candidate", {
+            targetSocketId,
+            candidate: e.candidate,
+          });
+        }
+      };
+
+      pc.onconnectionstatechange = () => {
+        if (["disconnected", "failed", "closed"].includes(pc.connectionState)) {
+          delete peersRef.current[targetSocketId];
+          updatePeers();
+        }
+      };
+
+      return pc;
+    },
+    [updatePeers]
+  );
+
+
 
   //Get camera and mic
   useEffect(() => {
@@ -221,6 +235,12 @@ function Room() {
       .then(stream => {
         localStreamRef.current = stream;
         setLocalStream(stream);
+
+        Object.values(peersRef.current).forEach(({ pc }) => {
+          stream.getTracks().forEach(track => {
+            pc.addTrack(track, stream);
+          });
+        });
       })
       .catch(err => console.error("Media error:", err));
 
@@ -261,14 +281,35 @@ function Room() {
     });
 
     //Initiate offer as existing user
-    s.on("user-joined", async ({ socketId: remoteId, username: remoteUsername }) => {
+    s.on("user-joined", ({ socketId: remoteId, username: remoteUsername }) => {
+      // If our camera/mic is NOT ready yet, wait until it is
+      if (!localStreamRef.current) {
+        const interval = setInterval(() => {
+          if (localStreamRef.current) {
+            clearInterval(interval);
+            createOfferToNewUser(remoteId, remoteUsername);
+          }
+        }, 100);
+        return;
+      }
+      // If camera is ready, create offer immediately
+      createOfferToNewUser(remoteId, remoteUsername);
+    });
+
+    async function createOfferToNewUser(remoteId, remoteUsername) {
       const pc = createPeerConnection(remoteId, remoteUsername, s);
       try {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        s.emit("webrtc-offer", { targetSocketId: remoteId, offer, username });
-      } catch (err) { console.error("Offer error:", err); }
-    });
+        s.emit("webrtc-offer", {
+          targetSocketId: remoteId,
+          offer,
+          username,
+        });
+      } catch (err) {
+        console.error("Offer error:", err);
+      }
+    }
 
     //Server tells who is in the room and awaiting offers
     s.on("existing-peers", (existingPeers) => {

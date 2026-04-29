@@ -38,7 +38,8 @@ app.post("/create-room", (_req, res) => {
     users: [],
     messages: [],
     queue: [],
-    performer: null
+    performer: null,
+    nowPlaying: null
   };
   res.json({ roomId });
 });
@@ -92,6 +93,11 @@ io.on("connection", (socket) => {
     socket.emit("queue-updated", rooms[roomId].queue);
     socket.emit("performer-updated", getPublicPerformer(rooms[roomId].performer));
     socket.emit("queue-updated", rooms[roomId].queue || []);
+    
+    if (room.nowPlaying) {
+      socket.emit("play-song", { song: room.nowPlaying });
+    }
+
 
     socket.to(roomId).emit("user-joined", { socketId: socket.id, username });
   });
@@ -139,6 +145,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("play-song", ({ roomId, song }) => {
+    if (!rooms[roomId]) return;
+
+    rooms[roomId].nowPlaying = song;   // <-- store current song
     io.to(roomId).emit("play-song", { song });
   });
 
