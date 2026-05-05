@@ -37,27 +37,43 @@ function Home() {
   }
 
   return (
-  <div className="homeContainer">
-    <h1 className="title">Virtual Karaoke</h1>
+    <div className="homeContainer">
+      <div className="mainContent">
+        <h1 className="title">Virtual Karaoke</h1>
 
-    <div className="buttonContainer">
-      <button onClick={createRoom}>Create Room</button>
+        <div className="buttonContainer">
+          <button onClick={createRoom}>Create Room</button>
 
-      <div className="joinContainer">
-        <input 
-          type="text" 
-          placeholder="Enter Room ID"
-          className="joinInput"
-          value={joinRoomId}
-          onChange={(e) => setJoinRoomId(e.target.value)}
-        />
-        <button onClick={joinRoom}>Join Room</button>
+          <div className="joinContainer">
+            <input 
+              type="text" 
+              placeholder="Enter Room ID"
+              className="joinInput"
+              value={joinRoomId}
+              onChange={(e) => setJoinRoomId(e.target.value)}
+            />
+            <button onClick={joinRoom}>Join Room</button>
+          </div>
+        </div>
       </div>
 
-    </div>
+      <div className="credits">
+        <div className="credit-section">
+          <h3 className="credit-title">Designed By</h3>
+          <p className="credit-names">
+            Michael Ahmadi, Jacob Gepp, Bhumit Patel, Jayanth Podapati
+          </p>
+        </div>
 
-  </div>
-);
+        <div className="credit-section">
+          <h3 className="credit-title">Implemented By</h3>
+          <p className="credit-names">
+            Vinny Manara, Jinghui Pang, Svastik Patel
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 
 }
 
