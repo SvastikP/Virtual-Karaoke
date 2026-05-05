@@ -1,6 +1,3 @@
-Absolutely — here is a **clean, polished, copy‑and‑paste–ready README.md** exactly as you requested.  
-No extra commentary, no explanations — just the final Markdown.
-
 ---
 
 # **Virtual Karaoke**
