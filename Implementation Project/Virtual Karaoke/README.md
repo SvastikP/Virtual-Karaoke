@@ -2,8 +2,8 @@
 
 # **Virtual Karaoke**
 
-A real‑time, multi‑user karaoke platform built with **React**, **Node.js**, **Socket.io**, and **WebRTC**.  
-Users can join rooms, stream their cameras, queue songs, and sing together with synchronized playback.
+A real‑time, multi‑user karaoke platform,  
+where users can join rooms, stream their cameras, queue songs, and sing together with synchronized playback.
 
 ---
 
